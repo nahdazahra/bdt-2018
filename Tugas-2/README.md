@@ -1,42 +1,44 @@
 # Fragmentasi pada MySQL Menggunakan Partisi Horizontal
 
+## Table of Contents
+
 ## Deskripsi server
 - Sistem operasi  : Linux Mint 18.3 Cinnamon 64-bit
-- Versi MySQL     : MySQL Ver 14.14 Distrib 5.7.23
-- RAM             : 3.6 GB
-- CPU             :  core
+- Versi MySQL     : 5.7.23
+- RAM             : 4 GB
+- CPU             : 4 cores
 
 ## Implementasi Partisi 1: Sakila DB
 
 ### Deskripsi dataset
-- Dataset ini terdiri dari 16 tabel.
+- Dataset terdiri dari 23 tabel.
 - Masing-masing tabel memiliki jumlah baris data sebagai berikut
 
-| TABLE_NAME                 | TABLE_ROWS |
-|:---------------------------|-----------:|
-| payment                    |      16049 |
-| rental                     |      16045 |
-| film_actor                 |       5462 |
-| inventory                  |       4581 |
-| film_text                  |       1000 |
-| film_category              |       1000 |
-| film                       |       1000 |
-| address                    |        603 |
-| city                       |        600 |
-| customer                   |        599 |
-| actor                      |        200 |
-| country                    |        109 |
-| category                   |         16 |
-| language                   |          6 |
-| store                      |          2 |
-| staff                      |          2 |
-| staff_list                 |       NULL |
-| actor_info                 |       NULL |
-| sales_by_store             |       NULL |
-| film_list                  |       NULL |
-| sales_by_film_category     |       NULL |
-| customer_list              |       NULL |
-| nicer_but_slower_film_list |       NULL |
+    | TABLE_NAME                 | TABLE_ROWS |
+    |:---------------------------|-----------:|
+    | payment                    |      16049 |
+    | rental                     |      16045 |
+    | film_actor                 |       5462 |
+    | inventory                  |       4581 |
+    | film_text                  |       1000 |
+    | film_category              |       1000 |
+    | film                       |       1000 |
+    | address                    |        603 |
+    | city                       |        600 |
+    | customer                   |        599 |
+    | actor                      |        200 |
+    | country                    |        109 |
+    | category                   |         16 |
+    | language                   |          6 |
+    | store                      |          2 |
+    | staff                      |          2 |
+    | staff_list                 |       NULL |
+    | actor_info                 |       NULL |
+    | sales_by_store             |       NULL |
+    | film_list                  |       NULL |
+    | sales_by_film_category     |       NULL |
+    | customer_list              |       NULL |
+    | nicer_but_slower_film_list |       NULL |
 
 
 ### Proses pembuatan partisi
@@ -139,25 +141,154 @@ Berdasarkan distribusi data yang terdapat dalam tabel pada database tersebut kit
     ```
 
 **Catatan :**
-> Ketika melakukan partisi pada sebuah tabel, tidak dapat menggunakan `FOREIGN KEY`, maka deklarasi `FOREIGN KEY` pada waktu membuat table dieksekusi.
+> Ketika melakukan partisi pada sebuah tabel, tidak dapat menggunakan `FOREIGN KEY`, maka deklarasi `FOREIGN KEY` pada waktu membuat table tidak dieksekusi.
 
 > `PRIMARY KEY` harus tetap tercantum pada setiap tabel partisi. Jika partisi yang dilakukan tidak menggunakan `PRIMARY KEY` tabel tersebut, atribut (kolom) yang dijadikan parameter untuk predikat harus menjadi `PRIMARY KEY` tabel tersebut.
 
 ### Benchmarking
-**Step 1** - Periksa menggunakan query `SELECT`.
-  ```mysql
-  
-  ```
-**Step 2** - Periksa dengan menggunakan query select 
+**Step 1** - Periksa tabel yang dipartisi menggunakan query `EXPLAIN`.
+
+```EXPLAIN SELECT COUNT(*) FROM payment;```
+
+**Step 2** - Lakukan verifikasi partisi dengan pengujian menggunakan query `INSERT`.
+```mysql
+-- insert data to PARTITION p6
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16050, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16057, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16064, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16071, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16078, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16085, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16092, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16099, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16106, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16113, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+
+-- insert data to PARTITION p5
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16056, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16063, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16070, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16077, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16084, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16091, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16098, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16105, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16112, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16119, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+
+-- insert data to PARTITION p4
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16055, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16062, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16069, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16076, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16083, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16090, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16097, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16104, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16111, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16118, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+
+-- insert data to PARTITION p3
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16054, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16061, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16068, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16075, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16082, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16089, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16096, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16103, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16110, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16117, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+
+-- insert data to PARTITION p2
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16053, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16060, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16067, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16074, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16081, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16088, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16095, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16102, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16109, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16116, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+
+-- insert data to PARTITION p1
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16052, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16059, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16066, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16073, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16080, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16087, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16094, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16101, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16108, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16115, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+
+-- insert data to PARTITION p0
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16051, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16058, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16065, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16072, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16079, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16086, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16093, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16100, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16107, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+INSERT INTO `payment` (`payment_id`, `customer_id`, `staff_id`, `rental_id`, `amount`, `payment_date`, `last_update`) VALUES (16114, "599", "1", "14599", "4.99", "2005-08-21 17:43:42", "2006-02-15 22:24:12");
+```
+
+**Step 3** - Periksa dengan menggunakan query select 
+```mysql
+-- menjalankan query ke tabel partisi data yang benar
+SELECT * FROM payment PARTITION (p6) WHERE payment_id = 16057;
+
+-- menjalankan query ke tabel partisi data yang salah
+SELECT * FROM payment PARTITION (p5) WHERE payment_id = 16057;
+```
+
+![Benchmarking Sakila](/Tugas-2/images/benchmark_sakila.png)
 
 ## Implementasi Partisi 2: measures dataset
 
 ### Deskripsi dataset
+- Dataset terdiri dari 2 tabel.
+- Masing-masing tabel memiliki jumlah baris data sebagai berikut
+
+    | TABLE_NAME           | TABLE_ROWS |
+    |----------------------|------------|
+    | partitioned_measures |    1837729 |
+    | measures             |    1837238 |
+
+- Dataset bisa didapatkan melalui [Measures Dataset](https://drive.google.com/open?id=0B2Ksz9hP3LtXRUppZHdhT1pBaWM).
 
 ### Import dataset
+**Step 1** - Import Measures dataset ke MySQL Database.
+```bash
+# Create a database for dataset
+echo "CREATE DATABASE `database-name`" | mysql -u[username] -p
+***insert MySQL password***
+
+# Import the dataset
+mysql -u[username] -p < sample_1_8_M_rows_data.sql
+***insert MySQL password***
+```
+> [username] = username MySQL yang akan digunakan.
 
 ### Benchmarking
-
-Checking MySQL
-- ```select count(*) from payment;``` jumlahnya sama di setiap db
-- ```explain select count(*) from payment;```
+```mysql
+SELECT SQL_NO_CACHE
+    COUNT(*)
+FROM
+    vertabelo.measures
+WHERE
+    measure_timestamp >= '2016-01-01'
+        AND DAYOFWEEK(measure_timestamp) = 1;
+     
+SELECT SQL_NO_CACHE
+    COUNT(*)
+FROM
+    vertabelo.partitioned_measures
+WHERE
+    measure_timestamp >= '2016-01-01'
+        AND DAYOFWEEK(measure_timestamp) = 1;
+```
