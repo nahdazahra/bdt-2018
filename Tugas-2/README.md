@@ -1,6 +1,22 @@
 # Fragmentasi pada MySQL Menggunakan Partisi Horizontal
+***Oleh Nahda Fauziyah Zahra (05111540000141)***
 
-## Table of Contents
+- [Fragmentasi pada MySQL Menggunakan Partisi Horizontal](#fragmentasi-pada-mysql-menggunakan-partisi-horizontal)
+    - [Deskripsi server](#deskripsi-server)
+    - [Implementasi Partisi 1: Sakila Dataset](#implementasi-partisi-1-sakila-dataset)
+        - [Deskripsi dataset](#deskripsi-dataset)
+        - [Proses pembuatan partisi](#proses-pembuatan-partisi)
+        - [Implementasi Partisi](#implementasi-partisi)
+        - [Benchmarking](#benchmarking)
+            - [Table payment](#table-payment)
+            - [Tabel rental](#tabel-rental)
+    - [Implementasi Partisi 2: Measures Dataset](#implementasi-partisi-2-measures-dataset)
+        - [Deskripsi dataset](#deskripsi-dataset)
+        - [Import dataset](#import-dataset)
+        - [Benchmarking](#benchmarking)
+            - [SELECT Query](#select-query)
+            - [BIG DELETE Query](#big-delete-query)
+    - [Kesimpulan](#kesimpulan)
 
 ## Deskripsi server
 - Sistem operasi  : Linux Mint 18.3 Cinnamon 64-bit
@@ -8,7 +24,7 @@
 - RAM             : 4 GB
 - CPU             : 4 cores
 
-## Implementasi Partisi 1: Sakila DB
+## Implementasi Partisi 1: Sakila Dataset
 
 ### Deskripsi dataset
 - Dataset terdiri dari 23 tabel.
@@ -145,13 +161,14 @@ Berdasarkan distribusi data yang terdapat dalam tabel pada database tersebut kit
 > `PRIMARY KEY` harus tetap tercantum pada setiap tabel partisi. Jika partisi yang dilakukan tidak menggunakan `PRIMARY KEY` tabel tersebut, atribut (kolom) yang dijadikan parameter untuk predikat harus menjadi `PRIMARY KEY` tabel tersebut.
 
 ### Benchmarking
-#### Table **payment**
+
+#### Table payment
 
 **Step 1** - Periksa tabel yang dipartisi menggunakan query `EXPLAIN`.
 
 ```EXPLAIN SELECT COUNT(*) FROM payment\G```
 
-![Explain table payment](/Tugas-2/images/explain1.png)
+![Explain table payment](/home/zahra/Documents/_TERM-7/BDT/self-bdt-2018/Tugas-2/images/explain1.png)
 
 **Step 2** - Lakukan verifikasi partisi dengan pengujian menggunakan query `INSERT`.
 ```mysql
@@ -249,14 +266,14 @@ SELECT * FROM payment PARTITION (p6) WHERE payment_id = 16057;
 SELECT * FROM payment PARTITION (p5) WHERE payment_id = 16057;
 ```
 
-![Benchmarking Table payment](/Tugas-2/images/benchmark_payment.png)
+![Benchmarking Table payment](/home/zahra/Documents/_TERM-7/BDT/self-bdt-2018/Tugas-2/images/benchmark_payment.png)
 
 #### Tabel rental
 **Step 1** - Periksa tabel yang dipartisi menggunakan query `EXPLAIN`.
 
 ```EXPLAIN SELECT COUNT(*) FROM rental\G```
 
-![Explain table rental](/Tugas-2/images/explain2.png)
+![Explain table rental](/home/zahra/Documents/_TERM-7/BDT/self-bdt-2018/Tugas-2/images/explain2.png)
 
 **Step 2** - Tambahkan `UNNIQUE INDEX` untuk `payment_date` sebagai `PRIMARY KEY` yang digunakan dalam tabel-tabel partisi.
 
@@ -422,9 +439,9 @@ SELECT * FROM rental PARTITION (p03) WHERE rental_date = '2018-03-18 15:16:05';
 SELECT * FROM rental PARTITION (p07) WHERE rental_date = '2018-03-18 15:16:05';
 ```
 
-![Benchmarking Table payment](/Tugas-2/images/benchmark_rental.png)
+![Benchmarking Table payment](/home/zahra/Documents/_TERM-7/BDT/self-bdt-2018/Tugas-2/images/benchmark_rental.png)
 
-## Implementasi Partisi 2: measures dataset
+## Implementasi Partisi 2: Measures Dataset
 
 ### Deskripsi dataset
 - Dataset terdiri dari 2 tabel.
@@ -454,7 +471,17 @@ mysql -u[username] -p < sample_1_8_M_rows_data.sql
 
 #### SELECT Query
 
-* Query untuk menjalankan tabel tidak dengan partisi.
+* Hapus index pada tabel untuk melihat performa asli dari query yang dieksekusi.
+    ```mysql
+    ALTER TABLE `vertabelo`.`measures` 
+    DROP INDEX `measure_timestamp` ;
+    
+    ALTER TABLE `vertabelo`.`partitioned_measures` 
+    DROP INDEX `measure_timestamp` ;
+
+    ```
+
+* Query `SELECT` untuk tabel tanpa pertisi.
     ```mysql
     SELECT SQL_NO_CACHE
         COUNT(*)
@@ -465,7 +492,7 @@ mysql -u[username] -p < sample_1_8_M_rows_data.sql
             AND DAYOFWEEK(measure_timestamp) = 1;
     ```
 
-* Query untuk menjalankan tabel dengan partisi.
+* Query `SELECT` untuk tabel dengan partisi.
     ```mysql
     SELECT SQL_NO_CACHE
         COUNT(*)
@@ -478,18 +505,63 @@ mysql -u[username] -p < sample_1_8_M_rows_data.sql
 
 * Hasil Query 
 
-|No | Tabel tanpa Partisi | Tabel dengan Partisi |
-|:-:|:-------------------:|:--------------------:|
-|1. | 1,11                |                      |
-|2. | 0,33                |                      |
-|3. | 0,32                |                      |
-|4. | 0,33                |                      |
-|5. | 0,33                |                      |
-|6. | 0,31                |                      |
-|7. | 0,32                |                      |
-|8. | 0,34                |                      |
-|9. | 0,34                |                      |
-|10.| 0,31                |                      |
+|No       | Tabel tanpa Partisi (detik) | Tabel dengan Partisi (detik) |
+|:-------:|:---------------------------:|:----------------------------:|
+|1.       | 2,49                        | 1,01                         |
+|2.       | 0,76                        | 0,42                         |
+|3.       | 0,76                        | 0,42                         |
+|4.       | 0,75                        | 0,41                         |
+|5.       | 0,75                        | 0,41                         |
+|6.       | 0,76                        | 0,41                         |
+|7.       | 0,75                        | 0,42                         |
+|8.       | 0,75                        | 0,42                         |
+|9.       | 0,76                        | 0,43                         |
+|10.      | 0,76                        | 0,41                         |
+|Rata-rata| 0,93                        | 0,48                         |
 
-SELECT SQL_NO_CACHE COUNT(*) FROM vertabelo.measures WHERE measure_timestamp >= '2016-01-01' AND DAYOFWEEK(measure_timestamp) = 1;
-SELECT SQL_NO_CACHE COUNT(*) FROM vertabelo.partitioned_measures WHERE measure_timestamp >= '2016-01-01' AND DAYOFWEEK(measure_timestamp) = 1;
+#### BIG DELETE Query
+
+* Tambahkan kembali index yang telah dihapus sebelumnya untuk  mengeksekusi query `BIG DELETE`.
+    ```mysql
+    ALTER TABLE `vertabelo`.`measures` 
+    ADD INDEX `index1` (`measure_timestamp` ASC);
+    ALTER TABLE `vertabelo`.`partitioned_measures` 
+    ADD INDEX `index1` (`measure_timestamp` ASC);
+    ```
+
+* Query `BIG DELETE` untuk tabel tanpa partisi.
+    ```mysql
+    DELETE
+    FROM vertabelo.measures
+    WHERE  measure_timestamp < '2015-01-01';
+    ```
+
+* Query `BIG DELETE` untuk tabel tanpa partisi.
+    ```mysql
+    ALTER TABLE vertabelo.partitioned_measures 
+    DROP PARTITION to_delete_logs ;
+    ```
+
+* Hasil Query
+
+|No       | Tabel tanpa Partisi (detik) | Tabel dengan Partisi (detik) |
+|:-------:|:---------------------------:|:----------------------------:|
+|1.       | 1,69                        | 0,98                         |
+|2.       | 1,74                        | 1,86                         |
+|3.       | 2,97                        | 0,43                         |
+|4.       | 0,78                        | 0,47                         |
+|5.       | 1,51                        | 1,22                         |
+|6.       | 0,44                        | 0,39                         |
+|7.       | 1,34                        | 0,51                         |
+|8.       | 1,26                        | 0,84                         |
+|9.       | 0,46                        | 0,41                         |
+|10.      | 0,58                        | 0,46                         |
+|Rata-rata| 1,24                        | 0,76                         |
+
+## Kesimpulan
+Pertimbangan untuk menentukan predikat untuk *Horizontal Partition* pada sebuah tabel salah satunya dapat dilihat dari banyaknya data yang terdapat dalam tabel tersebut. Maksimalkan fungsi dari *Horizantal Partition* untuk meminimalkan waktu eksekusi query yang sesuai dengan kebutuhan. Ketika membuat partisi pada tabel, perlu memperhatikan syarat-syarat fragmentasi diantaranya :
+- **Tidak diperbolehkan** penggunaan `FOREIGN KEY`.
+- Penggunaan `UNIQUE` dan `PRIMARY KEY` pada tabel.
+- Metode pembagian yang digunakan pada masing-masing fungsi `PARTITION` (`KEY`, `HASH`, `RANGE`, dan `LIST`).
+- Buktikan proses fragmentasi telah benar dengan pembuktian kondisi ***Completeness***, ***Reconstruction***, dan ***Disjointness***.
+- dsb.
