@@ -1,0 +1,73 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure("2") do |config|
+  config.vm.define "db_manager" do |db_manager|
+    db_manager.vm.hostname = "manager"
+    db_manager.vm.box = "bento/ubuntu-16.04"
+    db_manager.vm.network "private_network", ip: "192.168.33.10"
+    db_manager.vm.synced_folder ".", "/vagrant"
+
+    db_manager.vm.provider "virtualbox" do |vb|
+      vb.name = "manager"
+      vb.gui = false
+      vb.memory = "256"
+    end
+
+    db_manager.vm.provision "shell", path: "provision/dbnodes.sh", privileged: false
+  end
+
+  config.vm.define "db_node1" do |db_node1|
+    db_node1.vm.hostname = "node1"
+    db_node1.vm.box = "bento/ubuntu-16.04"
+    db_node1.vm.network "private_network", ip: "192.168.33.11"
+    db_node1.vm.synced_folder ".", "/vagrant"
+
+    db_node1.vm.provider "virtualbox" do |vb|
+      vb.name = "node1"
+      vb.gui = false
+      vb.memory = "256"
+    end
+
+    db_node1.vm.provision "shell", path: "provision/dbnodes.sh", privileged: false
+  end
+
+  config.vm.define "db_node2" do |db_node2|
+    db_node2.vm.hostname = "node2"
+    db_node2.vm.box = "bento/ubuntu-16.04"
+    db_node2.vm.network "private_network", ip: "192.168.33.12"
+    db_node2.vm.synced_folder ".", "/vagrant"
+
+    db_node2.vm.provider "virtualbox" do |vb|
+      vb.name = "node2"
+      vb.gui = false
+      vb.memory = "256"
+    end
+
+    db_node2.vm.provision "shell", path: "provision/dbnodes.sh", privileged: false
+  end
+
+  config.vm.define "web_app" do |app|
+    web_app.vm.hostname = "web"
+    web_app.vm.box = "bento/ubuntu-16.04"
+    web_app.vm.network "private_network", ip: "192.168.33.15"
+    web_app.vm.synced_folder "web_app/", "/var/www/web", 
+      id: "vagrant-root",
+      owner: "vagrant",
+      group: "www-data",
+      mount_options: ["dmode=775,fmode=664"]
+
+    web_app.vm.provider "virtualbox" do |vb|
+      vb.name = "web"
+      vb.gui = false
+      vb.memory = "256"
+    end
+
+    web_app.vm.provision "shell", path: "provision/web.sh", privileged: false
+  end
+
+end
